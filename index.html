@@ -1,170 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location Task</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Location Task Pro</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-        }
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
 
-        .container {
-            padding: 20px;
-        }
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
 
-        h1 {
-            font-size: 28px;
-            margin-bottom: 20px;
-        }
+/* Glass Card */
+.card {
+    backdrop-filter: blur(15px);
+    background: rgba(255,255,255,0.1);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    animation: fadeIn 1s ease;
+}
 
-        button {
-            padding: 15px 30px;
-            font-size: 18px;
-            border: none;
-            border-radius: 30px;
-            background: #00c6ff;
-            color: white;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
 
-        button:hover {
-            background: #0072ff;
-            transform: scale(1.1);
-        }
+h1 {
+    margin-bottom: 10px;
+}
 
-        /* Popup */
-        .popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            background: white;
-            color: black;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            transition: 0.3s;
-            z-index: 10;
-        }
+p {
+    font-size: 14px;
+    opacity: 0.8;
+}
 
-        .popup.active {
-            transform: translate(-50%, -50%) scale(1);
-        }
+/* Button */
+.btn {
+    margin-top: 20px;
+    padding: 15px;
+    width: 100%;
+    border: none;
+    border-radius: 30px;
+    font-size: 16px;
+    background: linear-gradient(45deg, #ff512f, #dd2476);
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
 
-        .popup button {
-            margin-top: 15px;
-            background: #2a5298;
-        }
+.btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+}
 
-        /* Overlay */
-        .overlay {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            top: 0;
-            left: 0;
-            display: none;
-        }
+/* Status */
+.status {
+    margin-top: 15px;
+    font-size: 14px;
+}
 
-        .overlay.active {
-            display: block;
-        }
+/* Popup */
+.popup {
+    position: fixed;
+    bottom: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    color: black;
+    padding: 20px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 300px;
+    text-align: center;
+    transition: 0.4s;
+}
 
-        /* Mobile */
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 22px;
-            }
+.popup.show {
+    bottom: 30px;
+}
 
-            button {
-                width: 100%;
-            }
-        }
-    </style>
+/* Loader */
+.loader {
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    margin: 10px auto;
+    animation: spin 1s linear infinite;
+    display: none;
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+</style>
 </head>
 
 <body>
 
-    <div class="container">
-        <h1>📍 Location Task</h1>
-        <button onclick="checkLocation()">Complete Task</button>
-    </div>
+<div class="card">
+    <h1>📍 Location Task</h1>
+    <p>Reach the target location to complete your mission</p>
 
-    <div class="overlay" id="overlay"></div>
+    <button class="btn" onclick="checkLocation()">Complete Task</button>
 
-    <div class="popup" id="popup">
-        <h2 id="message"></h2>
-        <button onclick="closePopup()">OK</button>
-    </div>
+    <div class="loader" id="loader"></div>
+    <div class="status" id="status"></div>
+</div>
 
-    <script>
-        function checkLocation() {
+<div class="popup" id="popup">
+    <h3 id="message"></h3>
+</div>
 
-            const targetLat = 13.133837;
-            const targetLon = 80.208937;
+<script>
+const targetLat = 13.133837;
+const targetLon = 80.208937;
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
+function checkLocation() {
+    document.getElementById("loader").style.display = "block";
+    document.getElementById("status").innerText = "Checking location...";
 
-                    const userLat = position.coords.latitude;
-                    const userLon = position.coords.longitude;
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
 
-                    const distance = getDistance(userLat, userLon, targetLat, targetLon);
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
 
-                    if (distance <= 200) {
-                        showPopup("✅ Task Completed!");
-                    } else {
-                        showPopup("❌ Go to the Location!");
-                    }
+            const distance = getDistance(userLat, userLon, targetLat, targetLon);
 
-                });
+            document.getElementById("loader").style.display = "none";
+
+            if (distance <= 300) {
+                showPopup("✅ Task Completed 🎉");
             } else {
-                alert("Geolocation not supported");
+                showPopup("❌ Move closer to location");
             }
-        }
 
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371000;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
+            document.getElementById("status").innerText =
+                "Distance: " + distance.toFixed(1) + " meters";
 
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(lat1 * Math.PI / 180) *
-                Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        }, function() {
+            showPopup("⚠️ Location permission denied");
+        });
+    } else {
+        showPopup("❌ Geolocation not supported");
+    }
+}
 
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
 
-            return R * c;
-        }
+    const a =
+        Math.sin(dLat/2)*Math.sin(dLat/2) +
+        Math.cos(lat1*Math.PI/180) *
+        Math.cos(lat2*Math.PI/180) *
+        Math.sin(dLon/2)*Math.sin(dLon/2);
 
-        function showPopup(msg) {
-            document.getElementById("message").innerText = msg;
-            document.getElementById("popup").classList.add("active");
-            document.getElementById("overlay").classList.add("active");
-        }
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
-        function closePopup() {
-            document.getElementById("popup").classList.remove("active");
-            document.getElementById("overlay").classList.remove("active");
-        }
-    </script>
+    return R * c;
+}
+
+function showPopup(msg) {
+    const popup = document.getElementById("popup");
+    document.getElementById("message").innerText = msg;
+
+    popup.classList.add("show");
+
+    setTimeout(() => {
+        popup.classList.remove("show");
+    }, 2500);
+}
+</script>
 
 </body>
-
 </html>
